@@ -126,12 +126,12 @@ end
 --- @param scratch_root string The root of the scratch directory
 --- @return string scratch_file The last edited scratch file. If this doesn't exist, will generate one
 function M.get_latest_scratch_file(scratch_root)
-	local scratch_dir = M.fs.get_scratch_dir(scratch_root)
+	local scratch_dir = M.get_scratch_dir(scratch_root)
 	local files_list = M.get_files_sorted_by_mtime(scratch_dir)
 
 	-- If there aren't any files in there, make one
 	if #files_list == 0 then
-		return M.fs.make_scratch_file(scratch_dir)
+		return M.make_scratch_file(scratch_dir)
 	else
 		return files_list[1]
 	end
