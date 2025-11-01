@@ -120,8 +120,12 @@ function M.spawn_float_window(scratch_path, window_opts)
 	vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, file_lines)
 
 	-- Trigger filetype detection on that buffer, so syntax highlighting works
+	-- The view stuff is to get around other plugins intercepting the commands and attempting to
+	-- restore the cursor position
+	local view = vim.fn.winsaveview()
 	vim.api.nvim_exec_autocmds("BufRead", { buffer = buf_id })
 	vim.api.nvim_exec_autocmds("BufNewFile", { buffer = buf_id })
+	vim.fn.winrestview(view)
 
 	-- Add keybinds
 	-- vim.api.nvim_buf_set_keymap(buf, "n", "w", ":w!<CR>", {})
