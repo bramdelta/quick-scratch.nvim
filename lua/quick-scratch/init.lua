@@ -14,12 +14,14 @@ local M = { ui = require("quick-scratch.ui"), fs = require("quick-scratch.fs") }
 --- @class ScratchBufferConfig
 --- @field scratch_root string Where all created scratch files should be stored
 --- @field create_root_automatically boolean If the `scratch_root` should be created if it doesn't exist
+--- @field log_level logging_levels The logging level of the logger
 --- @field float_window_style vim.api.keyset.win_config The arguments to pass to the float window
 M.config = {
 	-- TODO: This will break on Windows
 	scratch_root = os.getenv("HOME") .. "/test_notes/",
 	-- TODO: Implement this, likely via passing it down to private funcs
 	create_root_automatically = true,
+	log_level = "OFF",
 	float_window_style = M.ui.center_floating_window({
 		relative = "editor",
 		width = 80,
@@ -45,6 +47,8 @@ function M.setup(opts)
 
 	-- Merge user options on top of defaults for this instance
 	self.config = vim.tbl_deep_extend("force", M.config, opts or {})
+
+	logger:set_level(self.config.log_level)
 
 	return self
 end
