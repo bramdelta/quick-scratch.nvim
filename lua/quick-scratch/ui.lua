@@ -1,5 +1,7 @@
 local M = {}
 
+--- @alias PickerTypes 'snacks' | 'vim'
+
 --- Get a filename from a path
 --- For example, some/dir/file.md -> file.md
 --- @param path string The path to the file to get the filename of
@@ -94,12 +96,24 @@ local function _spawn_snacks_picker(picker_entries)
 	})
 end
 
+--- Spawn the built in vim.ui.select picker
+--- @param picker_entries string[] The entries to popualte the picker with
+local function _spawn_vim_select_picker(picker_entries)
+	vim.ui.select(picker_entries, {
+		prompt = "Scratches",
+	}, function(selected_entry)
+		print("Got " .. selected_entry)
+	end)
+end
+
 --- Spawn a picker of the specified type to the user
---- @param picker_type 'snacks' The picker type to spawn
+--- @param picker_type PickerTypes The picker type to spawn
 --- @param picker_entries string[] The entries to populate in the picker
 function M.spawn_picker(picker_type, picker_entries)
 	if picker_type == "snacks" then
 		_spawn_snacks_picker(picker_entries)
+	elseif picker_type == "vim" then
+		_spawn_vim_select_picker(picker_entries)
 	end
 end
 
