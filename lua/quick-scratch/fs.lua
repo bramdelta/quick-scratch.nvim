@@ -26,7 +26,7 @@ end
 --- Get the name of the workspace. This is the final path portion of the PWD
 --- @return string workspace_name The name of the current branch
 local function _get_workspace_name()
-	local pwd = io.popen("pwd"):read("*l")
+	local pwd = vim.fn.getcwd()
 
 	-- Get the final path portion
 	return pwd:match("([^/]+)$")
@@ -55,18 +55,25 @@ end
 --- @return FileStatObject[] file_list A table containing the filenamn
 local function _list_files_with_stat(dir)
 	local files = {}
-	-- Use %Y for mtime seconds, %n for filename
-	local cmd = string.format("stat --format '%%Y %%n' %s/*", dir)
-	local p = io.popen(cmd)
-	if p then
-		for line in p:lines() do
-			local mtime, filename = line:match("^(%d+)%s(.+)$")
-			if mtime and filename then
-				table.insert(files, { filename = filename, mtime = tonumber(mtime) })
-			end
-		end
-		p:close()
+	local dir_iter = vim.uv.fs_scandir(dir)
+
+	if not dir_iter then
+		return files
 	end
+
+	while true do
+		local name, _ = vim.uv.fs_scandir_next(dir_iter)
+		if not name then
+			break
+		end
+
+		local fullpath = dir .. "/" .. name
+		local stat = vim.uv.fs_stat(fullpath)
+		if stat and stat.mtime and stat.mtime.sec then
+			table.insert(files, { filename = fullpath, mtime = stat.mtime.sec })
+		end
+	end
+
 	return files
 end
 
