@@ -33,7 +33,7 @@ local function _get_workspace_name()
 end
 
 --- Get the default scratch filename. Used when no name is provided for a scratch file
---- @param file_extension string The file extension to use for the file.
+--- @param file_extension string The file extension to use for the file
 --- @return string default_filename The default name of the file
 local function _get_default_scratch_filename(file_extension)
 	-- Get current date/time
