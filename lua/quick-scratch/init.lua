@@ -14,6 +14,7 @@ local M = { ui = require("quick-scratch.ui"), fs = require("quick-scratch.fs") }
 --- @class ScratchBufferConfig
 --- @field scratch_root string Where all created scratch files should be stored
 --- @field create_root_automatically boolean If the `scratch_root` should be created if it doesn't exist
+--- @field default_file_extension string The file extension to assume when generating a scratch file on-the-fly. Defaults to "md" (markdown)
 --- @field log_level logging_levels The logging level of the logger
 --- @field float_window_style vim.api.keyset.win_config The arguments to pass to the float window
 M.config = {
@@ -22,6 +23,7 @@ M.config = {
 	-- TODO: Implement this, likely via passing it down to private funcs
 	create_root_automatically = true,
 	log_level = "OFF",
+	default_file_extension = "md",
 	float_window_style = M.ui.center_floating_window({
 		relative = "editor",
 		width = 80,
@@ -108,7 +110,8 @@ function M.create()
 	end
 
 	local scratch_dir = M.fs.get_scratch_dir(M.config.scratch_root)
-	local scratch_file_path = M.fs.make_scratch_file(scratch_dir, new_scratch_filename)
+	local scratch_file_path =
+		M.fs.make_scratch_file(scratch_dir, M.config.default_file_extension, new_scratch_filename)
 
 	return scratch_file_path
 end
