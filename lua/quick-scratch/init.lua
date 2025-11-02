@@ -35,8 +35,10 @@ M.config = {
 --- Internal module state
 --- @class ScratchBufferState
 --- @field scratch_window_context ScratchWindowContext | nil The current context of the windows
+--- @field last_buffer_pos number[] | nil The cursor position of the buffer. Used to restore it on toggle
 M._state = {
 	scratch_window_context = nil,
+	last_buffer_pos = nil,
 }
 
 ---Initialize the plugin
@@ -57,7 +59,8 @@ function M.open()
 	local scratch_file =
 		M.fs.get_latest_scratch_file(M.config.scratch_root, M.config.default_file_extension)
 	logger:log("Opening scratch file: " .. scratch_file)
-	local scratch_window_context = M.ui.spawn_float_window(scratch_file, M.config.float_window_style)
+	local scratch_window_context =
+		M.ui.spawn_float_window(scratch_file, M.config.float_window_style, M._state.last_buffer_pos)
 
 	if scratch_window_context ~= nil then
 		logger:log(
@@ -81,6 +84,9 @@ function M.close()
 		vim.api.nvim_buf_call(scratch_window_context.buffer_id, function()
 			vim.cmd("silent write!")
 		end)
+		-- Store the user's cursor position in state, for when they re-open it
+		M._state.last_buffer_pos = vim.api.nvim_win_get_cursor(scratch_window_context.window_id)
+
 		-- Close the window
 		vim.api.nvim_win_close(scratch_window_context.window_id, true)
 		logger:log("Deleted window ID '" .. scratch_window_context.window_id .. "'")
