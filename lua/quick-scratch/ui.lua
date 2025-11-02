@@ -106,8 +106,9 @@ end
 --- Spawn a floating window with the contents of the scratch path inside it
 --- @param scratch_path string The path to the scratch path
 --- @param window_opts vim.api.keyset.win_config The options to use when making the float window
+--- @param buffer_pos? number[] The position to put the cursor for the buffer
 --- @return ScratchWindowContext | nil buffer_id The scratch context, nil if the operation failed
-function M.spawn_float_window(scratch_path, window_opts)
+function M.spawn_float_window(scratch_path, window_opts, buffer_pos)
 	local file_lines = _read_scratch_path(scratch_path)
 
 	if file_lines == nil then
@@ -134,6 +135,11 @@ function M.spawn_float_window(scratch_path, window_opts)
 
 	-- Spawn the floating window
 	local window_id = vim.api.nvim_open_win(buf_id, true, window_opts)
+
+	-- Restore the user's position
+	if buffer_pos ~= nil then
+		vim.api.nvim_win_set_cursor(window_id, buffer_pos)
+	end
 
 	-- This means nvim couldn't make the window properly
 	if window_id == 0 then

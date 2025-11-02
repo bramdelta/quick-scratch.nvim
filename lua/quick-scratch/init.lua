@@ -13,14 +13,12 @@ local M = { ui = require("quick-scratch.ui"), fs = require("quick-scratch.fs") }
 --- Configuration for the module
 --- @class ScratchBufferConfig
 --- @field scratch_root string Where all created scratch files should be stored. If this not overridden by the user, this will be the OS' 'temp' directory
---- @field create_root_automatically boolean If the `scratch_root` should be created if it doesn't exist
 --- @field default_file_extension string The file extension to assume when generating a scratch file on-the-fly. Defaults to "md" (markdown)
 --- @field log_level logging_levels The logging level of the logger
 --- @field float_window_style vim.api.keyset.win_config The arguments to pass to the float window
 M.config = {
 	scratch_root = M.fs.get_tmpdir(),
 	-- TODO: Implement this, likely via passing it down to private funcs
-	create_root_automatically = true,
 	log_level = "OFF",
 	default_file_extension = "md",
 	float_window_style = M.ui.center_floating_window({
@@ -37,8 +35,10 @@ M.config = {
 --- Internal module state
 --- @class ScratchBufferState
 --- @field scratch_window_context ScratchWindowContext | nil The current context of the windows
+--- @field last_buffer_pos number[] | nil The cursor position of the buffer. Used to restore it on toggle
 M._state = {
 	scratch_window_context = nil,
+	last_buffer_pos = nil,
 }
 
 ---Initialize the plugin
@@ -59,7 +59,8 @@ function M.open()
 	local scratch_file =
 		M.fs.get_latest_scratch_file(M.config.scratch_root, M.config.default_file_extension)
 	logger:log("Opening scratch file: " .. scratch_file)
-	local scratch_window_context = M.ui.spawn_float_window(scratch_file, M.config.float_window_style)
+	local scratch_window_context =
+		M.ui.spawn_float_window(scratch_file, M.config.float_window_style, M._state.last_buffer_pos)
 
 	if scratch_window_context ~= nil then
 		logger:log(
@@ -79,8 +80,17 @@ function M.close()
 	local scratch_window_context = M._state.scratch_window_context
 
 	if scratch_window_context ~= nil then
+		-- Save the buffer
+		vim.api.nvim_buf_call(scratch_window_context.buffer_id, function()
+			vim.cmd("silent write!")
+		end)
+		-- Store the user's cursor position in state, for when they re-open it
+		M._state.last_buffer_pos = vim.api.nvim_win_get_cursor(scratch_window_context.window_id)
+
+		-- Close the window
 		vim.api.nvim_win_close(scratch_window_context.window_id, true)
 		logger:log("Deleted window ID '" .. scratch_window_context.window_id .. "'")
+		-- Close the buffer
 		vim.api.nvim_buf_delete(scratch_window_context.buffer_id, { force = true })
 		logger:log("Deleted buffer ID '" .. scratch_window_context.buffer_id .. "'")
 		M._state.scratch_window_context = nil
