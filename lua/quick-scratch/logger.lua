@@ -17,7 +17,7 @@ end
 
 --- Helper function for producing timestamps
 --- @return string timestamp The timestamp.
-function Logger:timestamp()
+local function get_timestamp()
 	return tostring(os.date("%Y-%m-%d %H:%M:%S"))
 end
 
@@ -28,7 +28,7 @@ function Logger:log(msg)
 		return
 	end
 
-	local line = string.format("[%s] %s\n", self:timestamp(), msg)
+	local line = string.format("[%s] %s\n", get_timestamp(), msg)
 	local f = io.open(self.logfile, "a")
 	if f then
 		f:write(line)
