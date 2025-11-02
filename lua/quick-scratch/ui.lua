@@ -79,7 +79,8 @@ local function _spawn_snacks_picker(picker_entries)
 						os.remove(file_path)
 					end
 				else
-					local user_choice = vim.fn.input("Delete the " .. item_count .. " selected files from disk? [y/n]")
+					local user_choice =
+						vim.fn.input("Delete the " .. item_count .. " selected files from disk? [y/n]")
 					if user_choice == "y" then
 						for _, removed_item in ipairs(selected_items) do
 							os.remove(removed_item.file)
