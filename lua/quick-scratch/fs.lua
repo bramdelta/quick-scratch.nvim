@@ -26,7 +26,7 @@ end
 --- Get the name of the workspace. This is the final path portion of the PWD
 --- @return string workspace_name The name of the current branch
 local function _get_workspace_name()
-	local pwd = io.popen("pwd"):read("*l")
+	local pwd = vim.fn.getcwd()
 
 	-- Get the final path portion
 	return pwd:match("([^/]+)$")
