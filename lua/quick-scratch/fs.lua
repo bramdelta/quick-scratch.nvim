@@ -130,16 +130,49 @@ end
 --- Retrieve the latest scratch file, determined by modification time
 --- If there is no "most recent" file to find, this function will generate one instead
 --- @param scratch_root string The root of the scratch directory
+--- @param default_file_extension string The file extension to create, if the file is auto-created
 --- @return string scratch_file The last edited scratch file. If this doesn't exist, will generate one
-function M.get_latest_scratch_file(scratch_root)
+function M.get_latest_scratch_file(scratch_root, default_file_extension)
 	local scratch_dir = M.get_scratch_dir(scratch_root)
 	local files_list = M.get_files_sorted_by_mtime(scratch_dir)
 
 	-- If there aren't any files in there, make one
 	if #files_list == 0 then
-		return M.make_scratch_file(scratch_dir)
+		return M.make_scratch_file(scratch_dir, default_file_extension)
 	else
 		return files_list[1]
+	end
+end
+
+--- Retrieve the tmpdir for the OS.
+--- This is the default scratch_root used in the config.
+--- @return string tmpdir The OS' tmpdir.
+function M.get_tmpdir()
+	-- Attempt to detect the OS via looking at the FS seperators
+	local sep = package.config:sub(1, 1)
+	local is_windows = sep == "\\"
+
+	-- Get envrionment variables, with plenty of fallbacks
+	local env_vars
+	if is_windows then
+		env_vars = { "TMP", "TEMP", "USERPROFILE" }
+	else
+		env_vars = { "TMPDIR", "TMP", "TEMP" }
+	end
+
+	-- Keep trying until we get a hit
+	for _, v in ipairs(env_vars) do
+		local temp = os.getenv(v)
+		if temp and temp ~= "" then
+			return temp
+		end
+	end
+
+	-- If we never got a hit, cross out fingers :)
+	if is_windows then
+		return "C:\\Windows\\Temp"
+	else
+		return "/tmp"
 	end
 end
 
