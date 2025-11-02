@@ -33,8 +33,9 @@ local function _get_workspace_name()
 end
 
 --- Get the default scratch filename. Used when no name is provided for a scratch file
+--- @param file_extension string The file extension to use for the file
 --- @return string default_filename The default name of the file
-local function _get_default_scratch_filename()
+local function _get_default_scratch_filename(file_extension)
 	-- Get current date/time
 	local timestamp = os.date("%Y-%m-%d-%H-%M")
 
@@ -46,7 +47,7 @@ local function _get_default_scratch_filename()
 		hash[i] = chars:sub(idx, idx)
 	end
 
-	return timestamp .. "-" .. table.concat(hash) .. ".md"
+	return timestamp .. "-" .. table.concat(hash) .. "." .. file_extension
 end
 
 --- List files with their last modified date
@@ -102,11 +103,16 @@ end
 
 --- Make a default scratch file. This uses the default generated scratch filename
 --- @param scratch_dir string The directory to put the newly generated scratch file in
+--- @param file_extension? string The file extension to use. Only required if file_name isn't provided
 --- @param file_name? string The name of the generated scratch file
 --- @return string new_scratch_filepath The path to the newly created scratch file
-function M.make_scratch_file(scratch_dir, file_name)
+function M.make_scratch_file(scratch_dir, file_extension, file_name)
 	if file_name == nil then
-		file_name = _get_default_scratch_filename()
+		if file_extension ~= nil then
+			file_name = _get_default_scratch_filename(file_extension)
+		else
+			error("Either `file_name` or `file_extension` must be provided!")
+		end
 	end
 
 	local new_file_path = scratch_dir .. "/" .. file_name
