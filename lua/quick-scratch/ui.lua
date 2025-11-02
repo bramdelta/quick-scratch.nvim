@@ -62,7 +62,10 @@ local function _spawn_snacks_picker(picker_entries, on_confirm)
 			end
 			return file_entries
 		end,
-		-- confirm = on_confirm,
+		confirm = function(snacks_picker, selected_item)
+			snacks_picker:close()
+			on_confirm(selected_item.file)
+		end,
 		win = {
 			input = {
 				keys = { ["dd"] = { "prompt_delete", mode = { "n", "x" } } },
