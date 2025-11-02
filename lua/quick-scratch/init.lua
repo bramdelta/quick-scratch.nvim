@@ -55,9 +55,13 @@ function M.setup(opts)
 end
 
 --- Open the most recent scratch file
-function M.open()
-	local scratch_file =
-		M.fs.get_latest_scratch_file(M.config.scratch_root, M.config.default_file_extension)
+--- @param scratch_file? string The path to the file to open. If not provided, will open the most recent scratch file
+function M.open(scratch_file)
+	if scratch_file == nil then
+		scratch_file =
+			M.fs.get_latest_scratch_file(M.config.scratch_root, M.config.default_file_extension)
+	end
+
 	logger:log("Opening scratch file: " .. scratch_file)
 	local scratch_window_context =
 		M.ui.spawn_float_window(scratch_file, M.config.float_window_style, M._state.last_buffer_pos)
@@ -131,7 +135,7 @@ function M.list()
 	local scratch_dir = M.fs.get_scratch_dir(M.config.scratch_root)
 	local file_list = M.fs.get_files_sorted_by_mtime(scratch_dir)
 
-	M.ui.spawn_picker("vim", file_list)
+	M.ui.spawn_picker("snacks", file_list, M.open)
 end
 
 return M

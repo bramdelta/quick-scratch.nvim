@@ -45,7 +45,8 @@ end
 
 --- Spawn a snacks picker
 --- @param picker_entries string[] The entries to popualte the picker with
-local function _spawn_snacks_picker(picker_entries)
+--- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
+local function _spawn_snacks_picker(picker_entries, on_confirm)
 	local snacks = require("snacks")
 	snacks.picker({
 		title = "Scratches",
@@ -61,6 +62,7 @@ local function _spawn_snacks_picker(picker_entries)
 			end
 			return file_entries
 		end,
+		-- confirm = on_confirm,
 		win = {
 			input = {
 				keys = { ["dd"] = { "prompt_delete", mode = { "n", "x" } } },
@@ -98,22 +100,22 @@ end
 
 --- Spawn the built in vim.ui.select picker
 --- @param picker_entries string[] The entries to popualte the picker with
-local function _spawn_vim_select_picker(picker_entries)
+--- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
+local function _spawn_vim_select_picker(picker_entries, on_confirm)
 	vim.ui.select(picker_entries, {
 		prompt = "Scratches",
-	}, function(selected_entry)
-		print("Got " .. selected_entry)
-	end)
+	}, on_confirm)
 end
 
 --- Spawn a picker of the specified type to the user
 --- @param picker_type PickerTypes The picker type to spawn
 --- @param picker_entries string[] The entries to populate in the picker
-function M.spawn_picker(picker_type, picker_entries)
+--- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
+function M.spawn_picker(picker_type, picker_entries, on_confirm)
 	if picker_type == "snacks" then
-		_spawn_snacks_picker(picker_entries)
+		_spawn_snacks_picker(picker_entries, on_confirm)
 	elseif picker_type == "vim" then
-		_spawn_vim_select_picker(picker_entries)
+		_spawn_vim_select_picker(picker_entries, on_confirm)
 	end
 end
 
