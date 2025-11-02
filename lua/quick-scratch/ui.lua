@@ -81,9 +81,11 @@ local function _spawn_snacks_picker(picker_entries, on_confirm)
 
 				if item_count == 1 then
 					local file_path = selected_items[1].file
-					local user_choice = vim.fn.input("Delete file '" .. file_path .. "' from disk? [y/n]")
+					local user_choice = vim.fn.input("Delete file '" .. file_path .. "' from disk? [y/n] ")
 					if user_choice == "y" then
 						os.remove(file_path)
+						-- Refresh the picker
+						snacks_picker:find({ refresh = true })
 					end
 				else
 					local user_choice =
@@ -92,9 +94,9 @@ local function _spawn_snacks_picker(picker_entries, on_confirm)
 						for _, removed_item in ipairs(selected_items) do
 							os.remove(removed_item.file)
 						end
+						-- Refresh the picker
+						snacks_picker:find({ refresh = true })
 					end
-					-- Refresh the picker
-					snacks_picker:find({ refresh = true })
 				end
 			end,
 		},
