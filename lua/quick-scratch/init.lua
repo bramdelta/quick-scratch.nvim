@@ -77,8 +77,14 @@ function M.close()
 	local scratch_window_context = M._state.scratch_window_context
 
 	if scratch_window_context ~= nil then
+		-- Save the buffer
+		vim.api.nvim_buf_call(scratch_window_context.buffer_id, function()
+			vim.cmd("silent write!")
+		end)
+		-- Close the window
 		vim.api.nvim_win_close(scratch_window_context.window_id, true)
 		logger:log("Deleted window ID '" .. scratch_window_context.window_id .. "'")
+		-- Close the buffer
 		vim.api.nvim_buf_delete(scratch_window_context.buffer_id, { force = true })
 		logger:log("Deleted buffer ID '" .. scratch_window_context.buffer_id .. "'")
 		M._state.scratch_window_context = nil
