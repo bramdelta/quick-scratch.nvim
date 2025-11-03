@@ -19,19 +19,16 @@ local M = { ui = require("quick-scratch.ui"), fs = require("quick-scratch.fs") }
 --- @field float_window_style vim.api.keyset.win_config The arguments to pass to the float window
 M.config = {
 	scratch_root = M.fs.get_tmpdir(),
-	-- TODO: Implement this, likely via passing it down to private funcs
 	log_level = "OFF",
 	default_file_extension = "md",
 	picker_provider = "vim",
-	float_window_style = M.ui.center_floating_window({
+	float_window_style = {
 		relative = "editor",
 		width = 80,
 		height = 24,
-		row = 5,
-		col = 10,
 		style = "minimal",
 		border = "rounded",
-	}),
+	},
 }
 
 --- Internal module state
@@ -50,6 +47,9 @@ function M.setup(opts)
 
 	-- Merge user options on top of defaults for this instance
 	self.config = vim.tbl_deep_extend("force", M.config, opts or {})
+
+	-- Recenter the window, so if the user changed it, it'll be centered
+	M.config.float_window_style = M.ui.center_floating_window(M.config.float_window_style)
 
 	logger:set_level(self.config.log_level)
 
