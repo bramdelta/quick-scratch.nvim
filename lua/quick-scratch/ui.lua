@@ -110,6 +110,7 @@ local function _spawn_telescope_picker(picker_entries, on_confirm)
 	local telescope_pickers = require("telescope.pickers")
 	local telescope_finders = require("telescope.finders")
 	local telescope_actions = require("telescope.actions")
+	local telescope_previewer = require("telescope.previewers").vim_buffer_cat.new({})
 
 	telescope_pickers
 		.new({}, {
@@ -117,6 +118,7 @@ local function _spawn_telescope_picker(picker_entries, on_confirm)
 			finder = telescope_finders.new_table({
 				results = picker_entries,
 			}),
+			previewer = telescope_previewer,
 			attach_mappings = function(prompt_bufnr, _)
 				-- Override telescope's default action to do the callback
 				telescope_actions.select_default:replace(function()
