@@ -1,5 +1,9 @@
 local M = {}
 
+--- @alias PickerTypes 'snacks' | 'vim' | 'telescope' | 'mini'
+
+local PICKER_TITLE = "Scratches"
+
 --- Get a filename from a path
 --- For example, some/dir/file.md -> file.md
 --- @param path string The path to the file to get the filename of
@@ -43,10 +47,11 @@ end
 
 --- Spawn a snacks picker
 --- @param picker_entries string[] The entries to popualte the picker with
-local function _spawn_snacks_picker(picker_entries)
+--- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
+local function _spawn_snacks_picker(picker_entries, on_confirm)
 	local snacks = require("snacks")
 	snacks.picker({
-		title = "Scratches",
+		title = PICKER_TITLE,
 		finder = function()
 			local file_entries = {}
 			for _, file_path in ipairs(picker_entries) do
@@ -58,6 +63,10 @@ local function _spawn_snacks_picker(picker_entries)
 				table.insert(file_entries, snacks_entry)
 			end
 			return file_entries
+		end,
+		confirm = function(snacks_picker, selected_item)
+			snacks_picker:close()
+			on_confirm(selected_item.file)
 		end,
 		win = {
 			input = {
@@ -74,9 +83,11 @@ local function _spawn_snacks_picker(picker_entries)
 
 				if item_count == 1 then
 					local file_path = selected_items[1].file
-					local user_choice = vim.fn.input("Delete file '" .. file_path .. "' from disk? [y/n]")
+					local user_choice = vim.fn.input("Delete file '" .. file_path .. "' from disk? [y/n] ")
 					if user_choice == "y" then
 						os.remove(file_path)
+						-- Refresh the picker
+						snacks_picker:find({ refresh = true })
 					end
 				else
 					local user_choice =
@@ -85,21 +96,88 @@ local function _spawn_snacks_picker(picker_entries)
 						for _, removed_item in ipairs(selected_items) do
 							os.remove(removed_item.file)
 						end
+						-- Refresh the picker
+						snacks_picker:find({ refresh = true })
 					end
-					-- Refresh the picker
-					snacks_picker:find({ refresh = true })
 				end
 			end,
 		},
 	})
 end
 
+--- Spawn Telescope's picker
+--- @param picker_entries string[] The entries to popualte the picker with
+--- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
+local function _spawn_telescope_picker(picker_entries, on_confirm)
+	local telescope_pickers = require("telescope.pickers")
+	local telescope_finders = require("telescope.finders")
+	local telescope_actions = require("telescope.actions")
+	local telescope_previewer = require("telescope.previewers").vim_buffer_cat.new({})
+
+	telescope_pickers
+		.new({}, {
+			prompt_title = PICKER_TITLE,
+			finder = telescope_finders.new_table({
+				results = picker_entries,
+			}),
+			previewer = telescope_previewer,
+			attach_mappings = function(prompt_bufnr, _)
+				-- Override telescope's default action to do the callback
+				telescope_actions.select_default:replace(function()
+					local selected_scratches = require("telescope.actions.state").get_selected_entry()
+					telescope_actions.close(prompt_bufnr)
+					-- Assuming 1, not supporting multi-select
+					on_confirm(selected_scratches[1])
+				end)
+				return true
+			end,
+		})
+		:find()
+end
+
+--- Spawn mini.nvim's picker
+--- @param picker_entries string[] The entries to popualte the picker with
+--- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
+local function _spawn_mini_picker(picker_entries, on_confirm)
+	local mini_picker = require("mini.pick")
+	mini_picker.start({
+		source = {
+			items = picker_entries,
+			name = PICKER_TITLE,
+			choose = function(scratch_filename)
+				mini_picker.stop()
+				-- Needed to allow mini time to properly shut down, otherwise
+				-- the scratch window won't get focus
+				vim.defer_fn(function()
+					on_confirm(scratch_filename)
+				end, 0.5)
+			end,
+		},
+	})
+end
+
+--- Spawn the built in vim.ui.select picker
+--- @param picker_entries string[] The entries to popualte the picker with
+--- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
+local function _spawn_vim_select_picker(picker_entries, on_confirm)
+	vim.ui.select(picker_entries, {
+		prompt = PICKER_TITLE,
+	}, on_confirm)
+end
+
 --- Spawn a picker of the specified type to the user
---- @param picker_type 'snacks' The picker type to spawn
+--- @param picker_type PickerTypes The picker type to spawn
 --- @param picker_entries string[] The entries to populate in the picker
-function M.spawn_picker(picker_type, picker_entries)
+--- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
+function M.spawn_picker(picker_type, picker_entries, on_confirm)
 	if picker_type == "snacks" then
-		_spawn_snacks_picker(picker_entries)
+		_spawn_snacks_picker(picker_entries, on_confirm)
+	elseif picker_type == "vim" then
+		_spawn_vim_select_picker(picker_entries, on_confirm)
+	elseif picker_type == "telescope" then
+		_spawn_telescope_picker(picker_entries, on_confirm)
+	elseif picker_type == "mini" then
+		_spawn_mini_picker(picker_entries, on_confirm)
 	end
 end
 
