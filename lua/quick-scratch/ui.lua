@@ -1,6 +1,6 @@
 local M = {}
 
---- @alias PickerTypes 'snacks' | 'vim' | 'telescope'
+--- @alias PickerTypes 'snacks' | 'vim' | 'telescope' | 'mini'
 
 --- Get a filename from a path
 --- For example, some/dir/file.md -> file.md
@@ -133,6 +133,27 @@ local function _spawn_telescope_picker(picker_entries, on_confirm)
 		:find()
 end
 
+--- Spawn mini.nvim's picker
+--- @param picker_entries string[] The entries to popualte the picker with
+--- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
+local function _spawn_mini_picker(picker_entries, on_confirm)
+	local mini_picker = require("mini.pick")
+	mini_picker.start({
+		source = {
+			items = picker_entries,
+			name = "Scratches",
+			choose = function(scratch_filename)
+				mini_picker.stop()
+				-- Needed to allow mini time to properly shut down, otherwise
+				-- the scratch window won't get focus
+				vim.defer_fn(function()
+					on_confirm(scratch_filename)
+				end, 0.5)
+			end,
+		},
+	})
+end
+
 --- Spawn the built in vim.ui.select picker
 --- @param picker_entries string[] The entries to popualte the picker with
 --- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
@@ -153,6 +174,8 @@ function M.spawn_picker(picker_type, picker_entries, on_confirm)
 		_spawn_vim_select_picker(picker_entries, on_confirm)
 	elseif picker_type == "telescope" then
 		_spawn_telescope_picker(picker_entries, on_confirm)
+	elseif picker_type == "mini" then
+		_spawn_mini_picker(picker_entries, on_confirm)
 	end
 end
 
