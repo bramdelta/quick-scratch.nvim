@@ -1,6 +1,6 @@
 local M = {}
 
---- @alias PickerTypes 'snacks' | 'vim'
+--- @alias PickerTypes 'snacks' | 'vim' | 'telescope'
 
 --- Get a filename from a path
 --- For example, some/dir/file.md -> file.md
@@ -103,6 +103,34 @@ local function _spawn_snacks_picker(picker_entries, on_confirm)
 	})
 end
 
+--- Spawn Telescope's picker
+--- @param picker_entries string[] The entries to popualte the picker with
+--- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
+local function _spawn_telescope_picker(picker_entries, on_confirm)
+	local telescope_pickers = require("telescope.pickers")
+	local telescope_finders = require("telescope.finders")
+	local telescope_actions = require("telescope.actions")
+
+	telescope_pickers
+		.new({}, {
+			prompt_title = "Scratches",
+			finder = telescope_finders.new_table({
+				results = picker_entries,
+			}),
+			attach_mappings = function(prompt_bufnr, _)
+				-- Override telescope's default action to do the callback
+				telescope_actions.select_default:replace(function()
+					local selected_scratches = require("telescope.actions.state").get_selected_entry()
+					telescope_actions.close(prompt_bufnr)
+					-- Assuming 1, not supporting multi-select
+					on_confirm(selected_scratches[1])
+				end)
+				return true
+			end,
+		})
+		:find()
+end
+
 --- Spawn the built in vim.ui.select picker
 --- @param picker_entries string[] The entries to popualte the picker with
 --- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
@@ -121,6 +149,8 @@ function M.spawn_picker(picker_type, picker_entries, on_confirm)
 		_spawn_snacks_picker(picker_entries, on_confirm)
 	elseif picker_type == "vim" then
 		_spawn_vim_select_picker(picker_entries, on_confirm)
+	elseif picker_type == "telescope" then
+		_spawn_telescope_picker(picker_entries, on_confirm)
 	end
 end
 

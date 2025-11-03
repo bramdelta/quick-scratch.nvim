@@ -135,7 +135,7 @@ function M.list()
 	local scratch_dir = M.fs.get_scratch_dir(M.config.scratch_root)
 	local file_list = M.fs.get_files_sorted_by_mtime(scratch_dir)
 
-	M.ui.spawn_picker("snacks", file_list, M.open)
+	M.ui.spawn_picker("telescope", file_list, M.open)
 end
 
 return M
