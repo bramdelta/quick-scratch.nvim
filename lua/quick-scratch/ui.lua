@@ -2,6 +2,8 @@ local M = {}
 
 --- @alias PickerTypes 'snacks' | 'vim' | 'telescope' | 'mini'
 
+local PICKER_TITLE = "Scratches"
+
 --- Get a filename from a path
 --- For example, some/dir/file.md -> file.md
 --- @param path string The path to the file to get the filename of
@@ -49,7 +51,7 @@ end
 local function _spawn_snacks_picker(picker_entries, on_confirm)
 	local snacks = require("snacks")
 	snacks.picker({
-		title = "Scratches",
+		title = PICKER_TITLE,
 		finder = function()
 			local file_entries = {}
 			for _, file_path in ipairs(picker_entries) do
@@ -114,7 +116,7 @@ local function _spawn_telescope_picker(picker_entries, on_confirm)
 
 	telescope_pickers
 		.new({}, {
-			prompt_title = "Scratches",
+			prompt_title = PICKER_TITLE,
 			finder = telescope_finders.new_table({
 				results = picker_entries,
 			}),
@@ -141,7 +143,7 @@ local function _spawn_mini_picker(picker_entries, on_confirm)
 	mini_picker.start({
 		source = {
 			items = picker_entries,
-			name = "Scratches",
+			name = PICKER_TITLE,
 			choose = function(scratch_filename)
 				mini_picker.stop()
 				-- Needed to allow mini time to properly shut down, otherwise
@@ -159,7 +161,7 @@ end
 --- @param on_confirm fun(item: string) The callback fired when the picker's options are selected
 local function _spawn_vim_select_picker(picker_entries, on_confirm)
 	vim.ui.select(picker_entries, {
-		prompt = "Scratches",
+		prompt = PICKER_TITLE,
 	}, on_confirm)
 end
 
