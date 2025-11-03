@@ -14,6 +14,7 @@ local M = { ui = require("quick-scratch.ui"), fs = require("quick-scratch.fs") }
 --- @class ScratchBufferConfig
 --- @field scratch_root string Where all created scratch files should be stored. If this not overridden by the user, this will be the OS' 'temp' directory
 --- @field default_file_extension string The file extension to assume when generating a scratch file on-the-fly. Defaults to "md" (markdown)
+--- @field picker_provider PickerTypes Which picker to use. See PickerTypes alias
 --- @field log_level logging_levels The logging level of the logger
 --- @field float_window_style vim.api.keyset.win_config The arguments to pass to the float window
 M.config = {
@@ -21,6 +22,7 @@ M.config = {
 	-- TODO: Implement this, likely via passing it down to private funcs
 	log_level = "OFF",
 	default_file_extension = "md",
+	picker_provider = "vim",
 	float_window_style = M.ui.center_floating_window({
 		relative = "editor",
 		width = 80,
@@ -135,7 +137,7 @@ function M.list()
 	local scratch_dir = M.fs.get_scratch_dir(M.config.scratch_root)
 	local file_list = M.fs.get_files_sorted_by_mtime(scratch_dir)
 
-	M.ui.spawn_picker("mini", file_list, M.open)
+	M.ui.spawn_picker(M.config.picker_provider, file_list, M.open)
 end
 
 return M
