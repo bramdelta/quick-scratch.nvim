@@ -8,7 +8,7 @@
 
 local Logger = require("quick-scratch.logger")
 local logger = Logger:new()
-local M = { ui = require("quick-scratch.ui"), fs = require("quick-scratch.fs") }
+local M = {}
 
 --- Internal module state
 --- @class ScratchBufferState
@@ -22,6 +22,9 @@ M._state = {
 function M:new(opts)
 	self.config = opts
 	self._state = M._state
+	self.ui = require("quick-scratch.ui")
+	self.fs = require("quick-scratch.fs")
+	print(vim.inspect(self.fs))
 
 	-- Recenter the window, so if the user changed it, it'll be centered
 	self.config.float_window_style = self.ui.center_floating_window(self.config.float_window_style)
@@ -119,7 +122,9 @@ function M:list()
 	local file_list = self.fs.get_files_sorted_by_mtime(scratch_dir)
 
 	self:close()
-	self.ui.spawn_picker(self.config.picker_provider, file_list, self.open)
+	self.ui.spawn_picker(self.config.picker_provider, file_list, function(scratch_file)
+		self:open(scratch_file)
+	end)
 end
 
 return M
