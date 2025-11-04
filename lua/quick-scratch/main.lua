@@ -24,7 +24,6 @@ function M:new(opts)
 	self._state = M._state
 	self.ui = require("quick-scratch.ui")
 	self.fs = require("quick-scratch.fs")
-	print(vim.inspect(self.fs))
 
 	-- Recenter the window, so if the user changed it, it'll be centered
 	self.config.float_window_style = self.ui.center_floating_window(self.config.float_window_style)
