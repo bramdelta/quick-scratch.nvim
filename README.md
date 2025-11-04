@@ -15,26 +15,27 @@ By default, Quick Scratch assumes the following options:
 ```lua
 --- Configuration for the module
 --- @class ScratchBufferConfig
---- @field scratch_root string Where all created scratch files should be stored. If this not overridden by the user, this will be the OS' 'temp' directory
+--- @field scratch_root string | nil Where all created scratch files should be stored. If this not overridden by the user, this will be the OS' 'temp' directory
 --- @field default_file_extension string The file extension to assume when generating a scratch file on-the-fly. Defaults to "md" (markdown)
 --- @field picker_provider PickerTypes Which picker to use. See PickerTypes alias
 --- @field log_level logging_levels The logging level of the logger
 --- @field float_window_style vim.api.keyset.win_config The arguments to pass to the float window
 opts = {
-    -- This is like /tmp, if you don't care about your scratch buffers being persistent
-    -- You could instead set this to a specific folder
-	scratch_root = M.fs.get_tmpdir(),
-	log_level = "OFF",
-	default_file_extension = "md",
-    -- This can be 'vim' | 'snacks' | 'mini' | 'telescope', depending on what picker you use
-	picker_provider = "vim",
-	float_window_style = M.ui.center_floating_window({
-		relative = "editor",
-		width = 80,
-		height = 24,
-		style = "minimal",
-		border = "rounded",
-	}),
+    -- Use /tmp for storing scratches
+    scratch_root = nil,
+    -- Or, if you'd rather them be persistent
+    -- scratch_root = os.getenv("HOME") .. "/notes-dir",
+    log_level = "OFF",
+    default_file_extension = "md",
+    -- This can be "vim" | "snacks" | "mini" | "telescope", depending on what picker you use
+    picker_provider = "vim",
+    float_window_style = {
+	relative = "editor",
+	width = 80,
+	height = 24,
+	style = "minimal",
+	border = "rounded",
+    },
 }
 ```
 
@@ -42,7 +43,9 @@ To override any of these, simply update your `opts` in your Lazy:
 ```lua
 {
     "bramdelta/quick-scratch.nvim",
+    ---@type ScratchBufferConfig
     opts = {
+	-- This will use snacks as the picker instead, with the omitted options using the defaults above
         picker_provider = "snacks"
     }
 }
