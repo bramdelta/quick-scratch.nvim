@@ -20,14 +20,13 @@ M._state = {
 }
 
 function M:new(opts)
-	-- Merge user options on top of defaults for this instance
-	-- self.config = vim.tbl_deep_extend("force", M.config, opts or {})
 	self.config = opts
 	self._state = M._state
 
 	-- Recenter the window, so if the user changed it, it'll be centered
 	self.config.float_window_style = self.ui.center_floating_window(self.config.float_window_style)
 
+	-- Set the root to /tmp if the user didn't set it
 	if self.config.scratch_root == nil then
 		self.config.scratch_root = self.fs.get_tmpdir()
 	end

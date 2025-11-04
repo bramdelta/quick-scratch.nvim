@@ -27,6 +27,8 @@ M.config = {
 ---@param opts ScratchBufferConfig The configuration to use for the module.
 function M.setup(opts)
 	local self = setmetatable({}, { __index = M })
+
+	-- Merge user options on top of defaults for this instance
 	local config = vim.tbl_deep_extend("force", M.config, opts or {})
 
 	quick_scratch:new(config)
