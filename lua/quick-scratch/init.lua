@@ -63,4 +63,9 @@ function M.list()
 	quick_scratch:list()
 end
 
+--- Execute the actively open scratch buffer
+function M.execute()
+	quick_scratch:execute()
+end
+
 return M

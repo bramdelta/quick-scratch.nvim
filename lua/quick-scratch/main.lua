@@ -126,4 +126,8 @@ function M:list()
 	end)
 end
 
+function M:execute()
+	self.fs.execute_lines()
+end
+
 return M

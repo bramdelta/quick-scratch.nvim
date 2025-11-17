@@ -77,6 +77,45 @@ local function _list_files_with_stat(dir)
 	return files
 end
 
+local function executable_available(executable_name)
+	--
+end
+
+local function get_repl_exit_command(executable_name)
+	--
+end
+
+-- vim.fn.jobstart({'nvim', '-h'}, {'on_stdout':{j,d,e->append(line('.'),d)}})
+
+local function get_repl_handle()
+	-- local handle = vim.fn.jobstart({ "python3", "-u" }, {
+	local handle = vim.fn.jobstart("python3", {
+		pty = true,
+		stdout_buffered = false,
+		stderr_buffered = false,
+		on_stdout = function(_, data, event)
+			print("Got some out...")
+			print(data[1])
+			-- print(vim.inspect(data))
+		end,
+		on_stderr = function(_, data, event)
+			-- print("Got some err...")
+			-- print(vim.inspect(data))
+		end,
+		on_exit = function(_, data, event)
+			-- print("Exited!")
+		end,
+	})
+	vim.defer_fn(function()
+		-- print("Defer ran")
+		-- vim.api.nvim_chan_send(handle, "print('hi')" .. "\n")
+		vim.api.nvim_chan_send(handle, "print('hello world')" .. "\n")
+		-- vim.api.nvim_chan_send(handle, "\4" .. "\n")
+	end, 2000)
+
+	return handle
+end
+
 --- List files sorted by last modified (descending)
 --- @param dir string The directory to iterate over
 --- @return string[] file_list The files sorted by last modified (descending)
@@ -181,6 +220,15 @@ function M.get_tmpdir()
 	else
 		return "/tmp"
 	end
+end
+
+function M.execute_lines()
+	local handle = get_repl_handle()
+	vim.defer_fn(function()
+		-- vim.api.nvim_chan_send(handle, "print('hi')" .. "\n")
+		-- vim.api.nvim_chan_send(handle, "print(8)" .. "\n")
+		-- vim.api.nvim_chan_send(handle, "exit()" .. "\n")
+	end, 100)
 end
 
 return M
