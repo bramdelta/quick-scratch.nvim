@@ -85,33 +85,41 @@ local function get_repl_exit_command(executable_name)
 	--
 end
 
--- vim.fn.jobstart({'nvim', '-h'}, {'on_stdout':{j,d,e->append(line('.'),d)}})
+--- Filter the output from the REPL to only include the actual output
+--- @param repl_response string[] Any responses from the REPL itself
+--- @return string repl_output The filtered REPL output, stripped of PTY quirks
+local function filter_output(repl_response)
+	for _, repl_line in ipairs(repl_response) do
+		-- Remove GNU readline-related stuff
+		repl_line = repl_line:gsub("\27%[[%d;]*[A-Za-z]", "")
+		-- Remove bracketed paste mode sequences
+		repl_line = repl_line:gsub("\27%[%?2004[h|l]", "")
+		local is_repl = repl_line:sub(1, #">>> ") == ">>> "
+		if not is_repl then
+			return repl_line
+		end
+	end
+end
 
+--- Get the REPL handle, allowing it to be used to send channel data
+--- @return integer handle_id The ID of the handle to send messages to
 local function get_repl_handle()
-	-- local handle = vim.fn.jobstart({ "python3", "-u" }, {
 	local handle = vim.fn.jobstart("python3", {
 		pty = true,
 		stdout_buffered = false,
 		stderr_buffered = false,
 		on_stdout = function(_, data, event)
-			print("Got some out...")
-			print(data[1])
-			-- print(vim.inspect(data))
+			-- print("Got some out...")
+			print(filter_output(data))
 		end,
 		on_stderr = function(_, data, event)
-			-- print("Got some err...")
-			-- print(vim.inspect(data))
+			print("Got some err...")
+			print(vim.inspect(data))
 		end,
 		on_exit = function(_, data, event)
-			-- print("Exited!")
+			print("Exited!")
 		end,
 	})
-	vim.defer_fn(function()
-		-- print("Defer ran")
-		-- vim.api.nvim_chan_send(handle, "print('hi')" .. "\n")
-		vim.api.nvim_chan_send(handle, "print('hello world')" .. "\n")
-		-- vim.api.nvim_chan_send(handle, "\4" .. "\n")
-	end, 2000)
 
 	return handle
 end
@@ -225,10 +233,9 @@ end
 function M.execute_lines()
 	local handle = get_repl_handle()
 	vim.defer_fn(function()
-		-- vim.api.nvim_chan_send(handle, "print('hi')" .. "\n")
-		-- vim.api.nvim_chan_send(handle, "print(8)" .. "\n")
-		-- vim.api.nvim_chan_send(handle, "exit()" .. "\n")
-	end, 100)
+		vim.api.nvim_chan_send(handle, "print('hello world')" .. "\n")
+		vim.api.nvim_chan_send(handle, "exit()" .. "\n")
+	end, 1000)
 end
 
 return M
