@@ -87,15 +87,20 @@ end
 
 --- Filter the output from the REPL to only include the actual output
 --- @param repl_response string[] Any responses from the REPL itself
---- @return string repl_output The filtered REPL output, stripped of PTY quirks
+--- @return string | nil repl_output The filtered REPL output, stripped of PTY quirks
 local function filter_output(repl_response)
 	for _, repl_line in ipairs(repl_response) do
 		-- Remove GNU readline-related stuff
 		repl_line = repl_line:gsub("\27%[[%d;]*[A-Za-z]", "")
 		-- Remove bracketed paste mode sequences
 		repl_line = repl_line:gsub("\27%[%?2004[h|l]", "")
+		-- Remove carriage returns
+		repl_line = repl_line:gsub("\r", "")
 		local is_repl = repl_line:sub(1, #">>> ") == ">>> "
-		if not is_repl then
+		-- TODO: This will backfire in creative ways if someone does print('')
+		local has_content = #repl_line > 0
+
+		if not is_repl and has_content then
 			return repl_line
 		end
 	end
@@ -103,7 +108,7 @@ end
 
 --- Get the REPL handle, allowing it to be used to send channel data
 --- @return integer handle_id The ID of the handle to send messages to
-local function get_repl_handle(on_stdout)
+local function get_repl_handle(on_stdout, on_exit)
 	local handle = vim.fn.jobstart("python3", {
 		pty = true,
 		stdout_buffered = false,
@@ -119,6 +124,8 @@ local function get_repl_handle(on_stdout)
 			print(vim.inspect(data))
 		end,
 		on_exit = function(_, data, event)
+			print("Exited!")
+			on_exit()
 			-- print("Exited!")
 		end,
 	})
@@ -245,20 +252,34 @@ end
 function M.execute_lines(buffer_id)
 	local repl_responses = {}
 	local buffer_lines = get_scratch_lines(buffer_id)
+	local virtual_text_namespace = vim.api.nvim_create_namespace("quick-scratch-exec-results")
 
 	local function on_stdout(data)
 		print(data)
 		table.insert(repl_responses, data)
 	end
 
-	local handle = get_repl_handle(on_stdout)
+	local function on_exit()
+		-- Set the REPL results as virtualtext lines
+		for index, line in ipairs(buffer_lines) do
+			-- TODO: This is to get around Python's startup message
+			local repl_response = repl_responses[index + 1]
+			print(vim.inspect(repl_responses))
+			vim.api.nvim_buf_set_extmark(buffer_id, virtual_text_namespace, 0, 0, {
+				virt_text = { { repl_response, "Comment" } },
+				virt_text_pos = "eol",
+			})
+		end
+	end
+
+	local handle = get_repl_handle(on_stdout, on_exit)
 
 	vim.defer_fn(function()
+		-- Submit all the lines over
 		for index, line in ipairs(buffer_lines) do
 			vim.api.nvim_chan_send(handle, line .. "\n")
 		end
-		-- vim.api.nvim_chan_send(handle, "print('hello world')" .. "\n")
-		-- vim.api.nvim_chan_send(handle, "exit()" .. "\n")
+		vim.api.nvim_chan_send(handle, "exit()" .. "\n")
 	end, 1000)
 end
 
