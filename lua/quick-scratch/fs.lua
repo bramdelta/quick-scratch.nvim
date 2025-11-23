@@ -103,14 +103,16 @@ end
 
 --- Get the REPL handle, allowing it to be used to send channel data
 --- @return integer handle_id The ID of the handle to send messages to
-local function get_repl_handle(on_stdout, on_stderr, on_exit)
+local function get_repl_handle(on_stdout)
 	local handle = vim.fn.jobstart("python3", {
 		pty = true,
 		stdout_buffered = false,
 		stderr_buffered = false,
 		on_stdout = function(_, data, event)
-			-- print("Got some out...")
-			print(filter_output(data))
+			local filtered_output = filter_output(data)
+			if filtered_output ~= nil then
+				on_stdout(filtered_output)
+			end
 		end,
 		on_stderr = function(_, data, event)
 			print("Got some err...")
@@ -241,10 +243,15 @@ end
 --- Execute all the lines in the current scratch buffer
 ---@param buffer_id number The ID of the buffer to execute
 function M.execute_lines(buffer_id)
+	local repl_responses = {}
 	local buffer_lines = get_scratch_lines(buffer_id)
-	-- local repl_responses = {}
-	local handle = get_repl_handle()
-	-- local function on_stdout()
+
+	local function on_stdout(data)
+		print(data)
+		table.insert(repl_responses, data)
+	end
+
+	local handle = get_repl_handle(on_stdout)
 
 	vim.defer_fn(function()
 		for index, line in ipairs(buffer_lines) do
