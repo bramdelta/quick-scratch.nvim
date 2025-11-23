@@ -127,7 +127,8 @@ function M:list()
 end
 
 function M:execute()
-	self.fs.execute_lines()
+	local buffer_id = self._state.scratch_window_context.buffer_id
+	self.fs.execute_lines(buffer_id)
 end
 
 return M

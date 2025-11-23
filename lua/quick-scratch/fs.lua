@@ -103,7 +103,7 @@ end
 
 --- Get the REPL handle, allowing it to be used to send channel data
 --- @return integer handle_id The ID of the handle to send messages to
-local function get_repl_handle()
+local function get_repl_handle(on_stdout, on_stderr, on_exit)
 	local handle = vim.fn.jobstart("python3", {
 		pty = true,
 		stdout_buffered = false,
@@ -117,7 +117,7 @@ local function get_repl_handle()
 			print(vim.inspect(data))
 		end,
 		on_exit = function(_, data, event)
-			print("Exited!")
+			-- print("Exited!")
 		end,
 	})
 
@@ -230,11 +230,28 @@ function M.get_tmpdir()
 	end
 end
 
-function M.execute_lines()
+--- Get the scratch buffer lines
+---@param buffer_id number The ID of the scratch buffer
+---@return string[] buffer_lines The lines from the buffer
+local function get_scratch_lines(buffer_id)
+	local lines = vim.api.nvim_buf_get_lines(buffer_id, 0, -1, false)
+	return lines
+end
+
+--- Execute all the lines in the current scratch buffer
+---@param buffer_id number The ID of the buffer to execute
+function M.execute_lines(buffer_id)
+	local buffer_lines = get_scratch_lines(buffer_id)
+	-- local repl_responses = {}
 	local handle = get_repl_handle()
+	-- local function on_stdout()
+
 	vim.defer_fn(function()
-		vim.api.nvim_chan_send(handle, "print('hello world')" .. "\n")
-		vim.api.nvim_chan_send(handle, "exit()" .. "\n")
+		for index, line in ipairs(buffer_lines) do
+			vim.api.nvim_chan_send(handle, line .. "\n")
+		end
+		-- vim.api.nvim_chan_send(handle, "print('hello world')" .. "\n")
+		-- vim.api.nvim_chan_send(handle, "exit()" .. "\n")
 	end, 1000)
 end
 
