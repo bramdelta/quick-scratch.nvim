@@ -198,6 +198,7 @@ function M.spawn_float_window(scratch_path, window_opts, buffer_pos)
 	local buf_id = vim.api.nvim_create_buf(false, false)
 	vim.api.nvim_buf_set_name(buf_id, scratch_path)
 	vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, file_lines)
+	vim.api.nvim_buf_set_var(buf_id, "is_scratch_buffer", true)
 
 	-- Trigger filetype detection on that buffer, so syntax highlighting works
 	-- The view stuff is to get around other plugins intercepting the commands and attempting to
