@@ -92,8 +92,7 @@ vim.api.nvim_create_autocmd({ "BufWritePost" }, {
   -- Checking true directly since this returns "" otherwise
   local is_scratch_buffer = vim.fn.getbufvar(opts.buf, "is_scratch_buffer") == true
   if not is_scratch_buffer then
-   require("lint").try_lint()
-   vim.cmd(":FormatWrite")
+    require("lint").try_lint()
   end
  end,
 })
