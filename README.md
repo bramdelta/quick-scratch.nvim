@@ -1,8 +1,11 @@
 # Quick Scratch
+
 A NeoVim plugin to provide a simple way to quickly jot down ideas in a scratch buffer.
 
 ## Installation (via Lazy)
+
 Simply add this to your lazy plugins list to install it:
+
 ```lua
 {
     "bramdelta/quick-scratch.nvim",
@@ -11,7 +14,9 @@ Simply add this to your lazy plugins list to install it:
 ```
 
 ## Default Configuration
+
 By default, Quick Scratch assumes the following options:
+
 ```lua
 --- Configuration for the module
 --- @class ScratchBufferConfig
@@ -30,29 +35,32 @@ opts = {
     -- This can be "vim" | "snacks" | "mini" | "telescope", depending on what picker you use
     picker_provider = "vim",
     float_window_style = {
-	relative = "editor",
-	width = 80,
-	height = 24,
-	style = "minimal",
-	border = "rounded",
+        relative = "editor",
+        width = 80,
+        height = 24,
+        style = "minimal",
+        border = "rounded",
     },
 }
 ```
 
 To override any of these, simply update your `opts` in your Lazy:
+
 ```lua
 {
     "bramdelta/quick-scratch.nvim",
     ---@type ScratchBufferConfig
     opts = {
-	-- This will use snacks as the picker instead, with the omitted options using the defaults above
+        -- This will use snacks as the picker instead, with the omitted options using the defaults above
         picker_provider = "snacks"
     }
 }
 ```
 
 ## Example Usage
+
 You can do something like this to map the plugin's functionality to specific keybinds:
+
 ```lua
 -- st, Scratch toggle
 vim.keymap.set("n", "<leader>st", scratch.toggle, { noremap = true, silent = true })
@@ -61,6 +69,7 @@ vim.keymap.set("n", "<leader>sl", scratch.list, { noremap = true, silent = true 
 -- sn, Scratch new
 vim.keymap.set("n", "<leader>sn", scratch.create, { noremap = true, silent = true })
 ```
+
 ## Determining Scratch Buffer Status Programmatically
 
 Say you have a bit of code like this, that lints on buffer write:
@@ -89,4 +98,3 @@ vim.api.nvim_create_autocmd({ "BufWritePost" }, {
  end,
 })
 ```
-
