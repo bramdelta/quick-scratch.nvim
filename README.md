@@ -61,3 +61,32 @@ vim.keymap.set("n", "<leader>sl", scratch.list, { noremap = true, silent = true 
 -- sn, Scratch new
 vim.keymap.set("n", "<leader>sn", scratch.create, { noremap = true, silent = true })
 ```
+## Determining Scratch Buffer Status Programmatically
+
+Say you have a bit of code like this, that lints on buffer write:
+
+```lua
+vim.api.nvim_create_autocmd({ "BufWritePost" }, {
+ callback = function()
+   require("lint").try_lint()
+ end,
+})
+```
+
+If your lint plugin tries to run on a scratch buffer, you'll run into problems since the buffer it's targeting no longer exists. This is due to the plugin firing a write on the buffer's content, followed by deleting the buffer.
+
+All scratch buffers created by this plugin bear a buffer-scoped variable called `is_scratch_buffer` set to `true`. So, you can modify your callback to check for this prior to running your commands, provided they're not meant to run on the scratch buffer:
+
+```lua
+vim.api.nvim_create_autocmd({ "BufWritePost" }, {
+ callback = function(opts)
+  -- Checking true directly since this returns "" otherwise
+  local is_scratch_buffer = vim.fn.getbufvar(opts.buf, "is_scratch_buffer") == true
+  if not is_scratch_buffer then
+   require("lint").try_lint()
+   vim.cmd(":FormatWrite")
+  end
+ end,
+})
+```
+
